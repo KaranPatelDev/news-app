@@ -38,6 +38,13 @@ function App() {
     changeCategory(category);
   };
 
+  // Auto-refresh news every 5 minutes
+  useEffect(() => {
+    const refreshInterval = setInterval(refresh, 5 * 60 * 1000);
+    return () => clearInterval(refreshInterval);
+  }, [refresh]);
+
+  // Refresh on visibility change and focus
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {

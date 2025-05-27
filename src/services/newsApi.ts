@@ -6,15 +6,11 @@ const API_KEY = 'pub_91258135157e4aff99b66aab7c7ddddb';
 const BASE_URL = 'https://newsdata.io/api/1';
 
 const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 10000; // Increased to 10 seconds
-const MAX_RETRY_DELAY = 120000; // Increased to 2 minutes
+const INITIAL_RETRY_DELAY = 5000;
+const MAX_RETRY_DELAY = 60000;
 
 // Keep track of seen articles to prevent duplicates
 const seenArticles = new Set<string>();
-
-// Simple cache implementation
-const cache = new Map<string, { data: Article[], timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 const mapNewsDataCategory = (categories: string[]): Category => {
   const categoryMap: Record<string, Category> = {
@@ -75,11 +71,6 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const fetchWithRetry = async (params: Record<string, string>, retryCount = 0): Promise<NewsDataResponse> => {
   try {
-    // Add a small initial delay to prevent burst requests
-    if (retryCount === 0) {
-      await delay(1000);
-    }
-    
     const response = await axios.get<NewsDataResponse>(`${BASE_URL}/news`, { params });
     return response.data;
   } catch (error: any) {
@@ -97,21 +88,7 @@ const fetchWithRetry = async (params: Record<string, string>, retryCount = 0): P
   }
 };
 
-const getCacheKey = (category: string, page: number): string => {
-  return `${category}-${page}`;
-};
-
 export const fetchLiveNews = async (category: string = '', page: number = 1): Promise<Article[]> => {
-  const cacheKey = getCacheKey(category, page);
-  const now = Date.now();
-
-  // Check cache first
-  const cachedData = cache.get(cacheKey);
-  if (cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
-    console.log('Returning cached data for:', cacheKey);
-    return cachedData.data;
-  }
-
   try {
     const params: Record<string, string> = {
       apikey: API_KEY,
@@ -135,23 +112,9 @@ export const fetchLiveNews = async (category: string = '', page: number = 1): Pr
       .map(transformNewsDataArticle)
       .filter((article): article is Article => article !== null);
 
-    // Cache the results
-    cache.set(cacheKey, {
-      data: articles,
-      timestamp: now
-    });
-
     return articles;
   } catch (error) {
     console.error('Error fetching live news:', error);
-    
-    // If we have cached data, use it even if expired
-    const expiredCache = cache.get(cacheKey);
-    if (expiredCache) {
-      console.log('Using expired cache data due to error');
-      return expiredCache.data;
-    }
-    
     return fallbackArticles;
   }
 };
@@ -159,9 +122,4 @@ export const fetchLiveNews = async (category: string = '', page: number = 1): Pr
 // Clear seen articles cache when switching categories
 export const clearSeenArticles = () => {
   seenArticles.clear();
-};
-
-// Clear the entire cache
-export const clearCache = () => {
-  cache.clear();
 };
