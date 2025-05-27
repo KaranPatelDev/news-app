@@ -27,7 +27,7 @@ function App() {
       setArticles(newsArticles);
     } catch (error) {
       console.error('Error loading news:', error);
-      toast.error('Failed to load news articles');
+      toast.error('Unable to load news articles. Will retry automatically.');
     } finally {
       setIsLoading(false);
     }
@@ -35,7 +35,8 @@ function App() {
 
   useEffect(() => {
     loadNews();
-    const interval = setInterval(loadNews, 300000); // Refresh every 5 minutes
+    // Increase refresh interval to 10 minutes to reduce API calls
+    const interval = setInterval(loadNews, 600000);
 
     return () => clearInterval(interval);
   }, [selectedCategory]);
