@@ -37,14 +37,18 @@ const transformNewsDataArticle = (article: NewsDataArticle): Article => ({
 
 export const fetchLiveNews = async (category: string = ''): Promise<Article[]> => {
   try {
-    const response = await axios.get<NewsDataResponse>(`${BASE_URL}/news`, {
-      params: {
-        apikey: API_KEY,
-        country: 'us',
-        category: category.toLowerCase(),
-        language: 'en',
-      },
-    });
+    const params: Record<string, string> = {
+      apikey: API_KEY,
+      country: 'us',
+      language: 'en',
+    };
+
+    // Only add category parameter if a specific category is selected
+    if (category) {
+      params.category = category.toLowerCase();
+    }
+
+    const response = await axios.get<NewsDataResponse>(`${BASE_URL}/news`, { params });
 
     if (response.data.status !== 'success') {
       throw new Error('API returned an error');
