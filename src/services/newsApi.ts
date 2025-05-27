@@ -3,7 +3,7 @@ import { articles as fallbackArticles } from '../data/articles';
 import { Article, Category, NewsApiArticle, NewsApiResponse } from '../types/news';
 
 const API_KEY = 'a836d2f4667e4f79ab21b26d6f4c16d7';
-const BASE_URL = 'https://newsapi.org/v2';
+const BASE_URL = '/api';
 
 const mapNewsApiCategory = (category: string): Category => {
   const categoryMap: Record<string, Category> = {
@@ -57,4 +57,3 @@ export const fetchLiveNews = async (category: string = ''): Promise<Article[]> =
     return fallbackArticles;
   }
 };
-
