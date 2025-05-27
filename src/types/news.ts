@@ -10,6 +10,7 @@ export interface Article {
   url?: string;
   source?: string;
   sentiment?: 'positive' | 'negative' | 'neutral';
+  isLatest?: boolean;
 }
 
 export type Category = 'Technology' | 'Science' | 'Business' | 'Health' | 'Entertainment' | 'Sports';
@@ -28,7 +29,7 @@ export interface NewsDataArticle {
   title: string;
   description: string;
   category: string[];
-  creator: string | null;
+  creator: string[] | null;
   pubDate: string;
   image_url: string | null;
   link: string;

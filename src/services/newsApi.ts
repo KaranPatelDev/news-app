@@ -63,8 +63,15 @@ const transformNewsDataArticle = (article: NewsDataArticle): Article | null => {
     readTime: Math.ceil((article.content?.length || 0) / 1000) || 3,
     url: article.link,
     source: article.source_id,
-    sentiment
+    sentiment,
+    isLatest: isLatestNews(new Date(article.pubDate))
   };
+};
+
+const isLatestNews = (date: Date): boolean => {
+  const now = new Date();
+  const hoursDiff = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+  return hoursDiff <= 24; // Consider news within last 24 hours as latest
 };
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

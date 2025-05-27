@@ -49,6 +49,11 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, isBookmarked,
             <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100">
               {article.category}
             </span>
+            {article.isLatest && (
+              <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100">
+                Latest
+              </span>
+            )}
             <span className="text-gray-500 dark:text-gray-400 text-sm">
               {formatDistanceToNow(article.date, { addSuffix: true })}
             </span>
