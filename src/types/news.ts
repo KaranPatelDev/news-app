@@ -9,14 +9,18 @@ export interface Article {
   readTime: number;
   url?: string;
   source?: string;
+  sentiment?: 'positive' | 'negative' | 'neutral';
 }
 
 export type Category = 'Technology' | 'Science' | 'Business' | 'Health' | 'Entertainment' | 'Sports';
+
+export type Mood = 'happy' | 'stressed' | 'curious' | 'bored' | 'angry';
 
 export interface NewsDataResponse {
   status: string;
   totalResults: number;
   results: NewsDataArticle[];
+  nextPage?: string;
 }
 
 export interface NewsDataArticle {
@@ -30,4 +34,5 @@ export interface NewsDataArticle {
   link: string;
   source_id: string;
   content: string;
+  sentiment?: 'positive' | 'negative' | 'neutral';
 }

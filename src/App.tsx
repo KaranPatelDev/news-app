@@ -5,66 +5,62 @@ import { BookmarksDrawer } from './components/BookmarksDrawer';
 import { CategoryFilter } from './components/CategoryFilter';
 import { Header } from './components/Header';
 import { LoadingGrid } from './components/LoadingGrid';
+import { MoodSelector } from './components/MoodSelector';
 import { SearchBar } from './components/SearchBar';
 import { useBookmarks } from './hooks/useBookmarks';
-import { fetchLiveNews } from './services/newsApi';
-import { Article, Category } from './types/news';
+import { useDarkMode } from './hooks/useDarkMode';
+import { useMoodNews } from './hooks/useMoodNews';
+import { useInfiniteNews } from './hooks/useInfiniteNews';
+import { clearSeenArticles } from './services/newsApi';
+import { Category } from './types/news';
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
+  const [isDark] = useDarkMode();
 
-  const loadNews = async () => {
-    setIsLoading(true);
-    try {
-      const newsArticles = await fetchLiveNews(
-        selectedCategory === 'All' ? '' : selectedCategory
-      );
-      setArticles(newsArticles);
-    } catch (error) {
-      console.error('Error loading news:', error);
-      toast.error('Unable to load news articles. Will retry automatically.');
-    } finally {
-      setIsLoading(false);
-    }
+  const {
+    articles,
+    hasMore,
+    isLoading,
+    loadMore,
+    refresh,
+    changeCategory
+  } = useInfiniteNews(selectedCategory);
+
+  const { userMood, updateMood, filteredArticles, moodStats } = useMoodNews(articles);
+
+  const handleCategoryChange = (category: Category | 'All') => {
+    setSelectedCategory(category);
+    clearSeenArticles();
+    changeCategory(category);
   };
 
   useEffect(() => {
-    loadNews();
-    // Increase refresh interval to 10 minutes to reduce API calls
-    const interval = setInterval(loadNews, 600000);
-
-    return () => clearInterval(interval);
-  }, [selectedCategory]);
-
-  // Add effect for page refresh
-  useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        loadNews();
+        refresh();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', loadNews);
+    window.addEventListener('focus', refresh);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', loadNews);
+      window.removeEventListener('focus', refresh);
     };
-  }, [selectedCategory]);
+  }, [refresh]);
 
-  const filteredArticles = useMemo(() => {
-    return articles.filter(article => {
+  const filteredAndSearchedArticles = useMemo(() => {
+    return filteredArticles.filter(article => {
       const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           article.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesSearch;
     });
-  }, [articles, searchQuery]);
+  }, [filteredArticles, searchQuery]);
 
   const handleToggleBookmark = (article: Article) => {
     if (isBookmarked(article.id)) {
@@ -77,11 +73,13 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${isDark ? 'dark' : ''}`}>
       <Toaster position="top-right" />
       <Header onOpenBookmarks={() => setIsBookmarksOpen(true)} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <MoodSelector currentMood={userMood} onMoodChange={updateMood} />
+        
         <SearchBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -89,16 +87,18 @@ function App() {
         
         <CategoryFilter
           selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
+          onCategoryChange={handleCategoryChange}
         />
 
-        {isLoading ? (
+        {isLoading && articles.length === 0 ? (
           <LoadingGrid />
         ) : (
           <ArticleGrid
-            articles={filteredArticles}
+            articles={filteredAndSearchedArticles}
             isBookmarked={isBookmarked}
             onToggleBookmark={handleToggleBookmark}
+            onLoadMore={loadMore}
+            hasMore={hasMore}
           />
         )}
       </main>
