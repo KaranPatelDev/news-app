@@ -13,22 +13,21 @@ export interface Article {
 
 export type Category = 'Technology' | 'Science' | 'Business' | 'Health' | 'Entertainment' | 'Sports';
 
-export interface NewsApiResponse {
+export interface NewsDataResponse {
   status: string;
   totalResults: number;
-  articles: NewsApiArticle[];
+  results: NewsDataArticle[];
 }
 
-export interface NewsApiArticle {
-  source: {
-    id: string | null;
-    name: string;
-  };
-  author: string | null;
+export interface NewsDataArticle {
+  article_id: string;
   title: string;
   description: string;
-  url: string;
-  urlToImage: string | null;
-  publishedAt: string;
+  category: string[];
+  creator: string | null;
+  pubDate: string;
+  image_url: string | null;
+  link: string;
+  source_id: string;
   content: string;
 }

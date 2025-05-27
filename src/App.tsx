@@ -18,26 +18,43 @@ function App() {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
 
-  useEffect(() => {
-    const loadNews = async () => {
-      setIsLoading(true);
-      try {
-        const newsArticles = await fetchLiveNews(
-          selectedCategory === 'All' ? '' : selectedCategory
-        );
-        setArticles(newsArticles);
-      } catch (error) {
-        console.error('Error loading news:', error);
-        toast.error('Failed to load news articles');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const loadNews = async () => {
+    setIsLoading(true);
+    try {
+      const newsArticles = await fetchLiveNews(
+        selectedCategory === 'All' ? '' : selectedCategory
+      );
+      setArticles(newsArticles);
+    } catch (error) {
+      console.error('Error loading news:', error);
+      toast.error('Failed to load news articles');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadNews();
     const interval = setInterval(loadNews, 300000); // Refresh every 5 minutes
 
     return () => clearInterval(interval);
+  }, [selectedCategory]);
+
+  // Add effect for page refresh
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadNews();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', loadNews);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', loadNews);
+    };
   }, [selectedCategory]);
 
   const filteredArticles = useMemo(() => {
